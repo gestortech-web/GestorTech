@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GestorTech</title>
+  <link rel="stylesheet" href="Estilo.css" />
+  <link rel="stylesheet" href="nav_links.css" />
+</head>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail,
+    onAuthStateChanged,
+    updateProfile,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+  // Configuração de ligação
+  const firebaseConfig = {
+  apiKey: "AIzaSyAn5tuFL4Llf9vnaC9Y63LvqRfs8973S7E",
+  authDomain: "gestortech-7ce0b.firebaseapp.com",
+  databaseURL: "https://gestortech-7ce0b-default-rtdb.firebaseio.com",
+  projectId: "gestortech-7ce0b",
+  storageBucket: "gestortech-7ce0b.appspot.com",  // ← Aqui está a correção
+  messagingSenderId: "8206041679",
+  appId: "1:8206041679:web:e4d2f5bc64b573dd79e03a"
+};
+
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // Sessão + Botão com Nome
+  onAuthStateChanged(auth, user => {
+    const btn = document.getElementById("botaoLogin");
+    if (user) {
+      btn.textContent = `Olá, ${user.displayName || user.email.split('@')[0]}`;
+    } else {
+      btn.textContent = "Entrar";
+    }
+
+    document.querySelectorAll(".sidebar a").forEach(link => {
+      const href = link.getAttribute("href");
+      const isInicio = href.includes("Início.html") || href.includes("index.html");
+
+      if (!user && !isInicio) {
+        link.addEventListener("click", e => {
+          e.preventDefault();
+          abrirJanela();
+        });
+      }
+    });
+  });
+
+  // Janela Login / Logout
+  window.abrirJanela = () => {
+    if (auth.currentUser) {
+      if (confirm("Deseja terminar a sessão?")) {
+        signOut(auth).then(() => location.reload());
+      }
+    } else {
+      document.getElementById("janela_conteudo").style.display = "block";
+      document.getElementById("fechar-overlay").style.display = "block";
+      mostrarLogin();
+    }
+  };
+
+  window.fecharEntrada = () => {
+    document.getElementById("janela_conteudo").style.display = "none";
+    document.getElementById("fechar-overlay").style.display = "none";
+  };
+
+  window.mostrarLogin = () => {
+    document.getElementById("entrar_conteudo").style.display = "block";
+    document.getElementById("registo_conteudo").style.display = "none";
+    document.getElementById("esqueci_senha_conteudo").style.display = "none";
+  };
+
+  window.mostrarRegisto = () => {
+    document.getElementById("entrar_conteudo").style.display = "none";
+    document.getElementById("registo_conteudo").style.display = "block";
+    document.getElementById("esqueci_senha_conteudo").style.display = "none";
+  };
+
+  window.mostrarEsqueciSenha = () => {
+    document.getElementById("entrar_conteudo").style.display = "none";
+    document.getElementById("registo_conteudo").style.display = "none";
+    document.getElementById("esqueci_senha_conteudo").style.display = "block";
+  };
+
+  window.iniciarSessao = () => {
+    const email = document.getElementById("login_email").value;
+    const senha = document.getElementById("login_senha").value;
+    signInWithEmailAndPassword(auth, email, senha)
+      .then(() => location.reload())
+      .catch(err => alert("Erro ao entrar: " + err.message));
+  };
+
+  window.criarConta = () => {
+    const nome = document.getElementById("reg_nome").value;
+    const email = document.getElementById("reg_email").value;
+    const senha = document.getElementById("reg_senha").value;
+    const confirmar = document.getElementById("reg_confirmar").value;
+    if (senha !== confirmar) return alert("As senhas não coincidem");
+    createUserWithEmailAndPassword(auth, email, senha)
+      .then(userCred => updateProfile(userCred.user, { displayName: nome }))
+      .then(() => {
+        alert("Conta criada com sucesso!");
+        location.reload();
+      })
+      .catch(err => alert("Erro: " + err.message));
+  };
+
+  window.recuperarSenha = () => {
+    const email = document.getElementById("rec_email").value;
+    sendPasswordResetEmail(auth, email)
+      .then(() => alert("Email de recuperação enviado."))
+      .catch(err => alert("Erro ao enviar email: " + err.message));
+  };
+
+  // Contadores
+  let abatidosCount = 0;
+  let avariadosCount = 0;
+
+  const abatidosRef = ref(db, 'abatidos');
+    onValue(abatidosRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        abatidosCount = Object.keys(data).length;
+        animateCount("abatidos", abatidosCount);
+        atualizarTotal();
+      }
+    });
+
+    const avariasRef = ref(db, 'avarias');
+    onValue(avariasRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        avariadosCount = Object.keys(data).length;
+        animateCount("avariados", avariadosCount);
+        atualizarTotal();
+      }
+    });
+
+    function atualizarTotal() {
+      const total = abatidosCount + avariadosCount;
+      animateCount("total", total);
+    }
+
+    function animateCount(elementId, finalValue) {
+      const el = document.getElementById(elementId);
+      let start = 0;
+      const duration = 2500; // Tempo total da animação em ms 
+      const frameRate = 30; // 30fps
+      const totalFrames = Math.round(duration / (1000 / frameRate));
+      const increment = finalValue / totalFrames;
+
+      const step = () => {
+        start += increment;
+        if (start >= finalValue) {
+          el.textContent = finalValue;
+        } else {
+          el.textContent = Math.floor(start);
+          requestAnimationFrame(step);
+        }
+      };
+      step();
+    }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleInput = document.getElementById("modoToggle");
+  const modoLabel = document.getElementById("modoLabel");
+  const body = document.body;
+
+  function aplicarModo(modo) {
+    if (modo === "escuro") {
+      body.classList.add("modo-escuro");
+      toggleInput.checked = true;
+      modoLabel.textContent = "Modo Escuro";
+    } else {
+      body.classList.remove("modo-escuro");
+      toggleInput.checked = false;
+      modoLabel.textContent = "Modo Claro";
+    }
+  }
+
+  const modoSalvo = localStorage.getItem("modo") || "claro";
+  aplicarModo(modoSalvo);
+
+  toggleInput.addEventListener("change", () => {
+    const novoModo = toggleInput.checked ? "escuro" : "claro";
+    aplicarModo(novoModo);
+    localStorage.setItem("modo", novoModo);
+  });
+});
+
+</script>
+
+<body>
+  <div class="topbar">
+    <div class="tp_esquerda">
+      <a href="https://www.esbocage.com/" class="logo-link">
+        <img src="logo.webp" alt="Logo" />
+      </a>
+    </div>
+    <div class="tp_direita">
+      <div class="entrar_area">
+        <button class="botoes" id="botaoLogin" onclick="abrirJanela()">Entrar</button>
+      </div>
+      <div class="modo-toggle">
+        <span id="modoLabel" class="modo-label">Modo Claro</span>
+        <label class="switch">
+          <input type="checkbox" id="modoToggle">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h2 class="sidebar-title">GestorTech</h2>
+    <ul>
+      <li><a href="Início.html">Início</a></li>
+      <li><a href="Histórico.html">Histórico</a></li>
+      <li><a href="Avariados.html">Avarias</a></li>
+      <li><a href="Abatidos.html">Abatidos</a></li>
+    </ul>
+  </div>
+
+  <main class="conteudo-principal">
+    <div class="geral">
+      <h1>Bem-vindo ao GestorTech</h1>
+      <p>O GestorTech é um site que facilita a gestão dos computadores da Escola 
+        Secundária du Bocage, permitindo controle e administração eficiente
+        de equipamentos, seu estado atualizado, avarias e abatimentos, possibilitando gerar 
+        relatórios detalhados.
+      </p>
+      <h2>Principais funcionalidades:</h2>
+      <P class = "lista">Monitorização de equipamentos;</P>
+      <P class = "lista">Gestão de avarias e abatimentos;</P>
+      <P class = "lista">Elaboração de relatórios técnicos.</P>
+    </div>
+    <br><br>
+
+    <div class="geral">
+      <div class="contagem">Revisão de Equipamentos</div>
+        <div class="contagem_conteudo">
+          <div class="card-contagem">
+            <h4>Total Equipamentos</h4>
+            <p id="total">0</p>
+          </div>
+          <div class="card-contagem">
+            <h4>Abatidos</h4>
+            <p id="abatidos">0</p>
+          </div>
+          <div class="card-contagem">
+            <h4>Avariados</h4>
+            <p id="avariados">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br><br>
+
+    <div class="geral">
+      <h2 style="margin-left: 100px;">Como funciona?</h2>
+      <video class="video_manual" controls>
+        <source src="Manual_utilizador.mp4" width = "320" height = "240" type = "video/mp4">
+        Seu navegador não suporta a tag do vídeo.
+        <a href="Manual_utilizador.mp4" width="360" height="220" controls>Baixar vídeo</a>
+      </video>
+    </div>
+          
+  </main>
+
+  <div id="fechar-overlay" class="fechar-overlay" onclick="fecharEntrada()"></div>
+  <div id="janela_conteudo" class="janela">
+    <button class="botao-fechar" onclick="fecharEntrada()">×</button>
+
+    <div id="entrar_conteudo" class="conteudo_login">
+      <h4>Entrar</h4>
+      <input type="email" id="login_email" placeholder="Email">
+      <input type="password" id="login_senha" placeholder="Palavra-passe">
+      <button onclick="iniciarSessao()">Entrar</button>
+      <p><a href="#" onclick="mostrarRegisto()">Não tem conta? Registe-se</a></p>
+      <p><a href="#" onclick="mostrarEsqueciSenha()">Esqueceu a Palavra-passe</a></p>
+    </div>
+
+    <div id="registo_conteudo" class="conteudo_login" style="display:none;">
+      <h4>Registro</h4>
+      <input type="text" id="reg_nome" placeholder="Nome de Utilizador">
+      <input type="email" id="reg_email" placeholder="Email">
+      <input type="password" id="reg_senha" placeholder="Palavra-passe">
+      <input type="password" id="reg_confirmar" placeholder="Confirmar Palavra-passe">
+      <button onclick="criarConta()">Criar Conta</button>
+      <p><a href="#" onclick="mostrarLogin()">Já tem conta? Entrar</a></p>
+    </div>
+
+    <div id="esqueci_senha_conteudo" class="conteudo_login" style="display:none;">
+      <h4>Esqueci a Palavra-passe</h4>
+      <p>Insira o seu email para recuperar a sua palavra-passe.</p>
+      <input type="email" id="rec_email" placeholder="Email">
+      <button onclick="recuperarSenha()">Enviar</button>
+      <p><a href="#" onclick="mostrarLogin()">Voltar ao Login</a></p>
+    </div>
+  </div>
+
+    <footer>
+    <div class="footer-container">
+      <div class="footer-content">
+        <p>&copy; 2023 GestorTech. Todos os direitos reservados.</p>
+        <p>Desenvolvido por: ESBOCAGE</p>
+      </div>
+      <div class="media-links">
+        <a href="https://www.facebook.com/escolasecundariadubocageoficial/">
+          <img src="facebook.png" alt="Facebook">
+        </a>
+        <a href="https://www.instagram.com/esbocage/">
+          <img src="Instagram.png" alt="Instagram">
+        </a>
+        <a href="https://www.youtube.com/@ESduBocage">
+          <img src="Youtube.png" alt="YouTube">
+        </a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

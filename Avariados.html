@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GestorTech</title>
+    <link rel="stylesheet" href="Estilo.css" />
+    <link rel="stylesheet" href="nav_links.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="topbar">
+        <div class="tp_esquerda">
+            <a href="https://www.esbocage.com/" class="logo-link">
+                <img src="logo.webp" alt="Logo" />
+            </a>
+        </div>
+        <div class="tp_direita">
+            <div class="modo-toggle">
+                <span id="modoLabel" class="modo-label">Modo Claro</span>
+                <label class="switch">
+                    <input type="checkbox" id="modoToggle" title="label" />
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sidebar">
+        <h2 class="sidebar-title">GestorTech</h2>
+        <ul>
+            <li><a href="Início.html">Início</a></li>
+            <li><a href="Histórico.html">Histórico</a></li>
+            <li><a href="Avariados.html">Avarias</a></li>
+            <li><a href="Abatidos.html">Abatidos</a></li>
+        </ul>
+    </div>
+
+    <main>
+        <div class="titulos_tab">Lista de Equipamentos Avariados</div>
+
+        <button class="btn_tab" onclick="abrirModalAdicionar()">+ Novo Registo</button>
+        <button class="btn_tabelas" onclick="gerarPDF()">Exportar PDF</button>
+        <button class="btn_tabelas" onclick="gerarExcel()">Exportar Excel</button>
+
+        <div class="tabela_conteudo">
+            <table class="tabelas">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nº Computador</th>
+                        <th>Nº Série</th>
+                        <th>Data</th>
+                        <th>Modelo</th>
+                        <th>Técnico</th>
+                        <th>Estado</th>
+                        <th>Descrição</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Modal Adicionar -->
+        <div class="modal" id="modalAdicionar">
+            <div class="modal-content">
+                <span class="modal-close" onclick="fecharModalAdicionar()">&times;</span>
+                <h6>+ Novo Registo</h6>
+                <div class="error-message" id="errorMsgAdicionar"></div>
+                <input type="text" id="add_num_computador" placeholder="Nº Computador *" />
+                <input type="text" id="add_numero_serie" placeholder="Nº Série *" />
+                <input type="date" id="add_data" title="data" />
+                <input type="text" id="add_modelo" placeholder="Modelo" />
+                <input type="text" id="add_tecnico" placeholder="Técnico" />
+                <input type="text" id="add_estado" placeholder="Estado" />
+                <textarea id="add_descricao" placeholder="Descrição *"></textarea>
+                <input type="text" id="add_situacao" placeholder="Situação" />
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="fecharModalAdicionar()">Cancelar</button>
+                    <button class="btn-primary" onclick="guardarNovo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Editar -->
+        <div class="modal" id="modalEditar">
+            <div class="modal-content">
+                <span class="modal-close" onclick="fecharModalEditar()">&times;</span>
+                <h6>Editar Registo</h6>
+                <div class="error-message" id="errorMsgEditar"></div>
+                <input type="text" id="edit_num_computador" placeholder="Nº Computador *" />
+                <input type="text" id="edit_numero_serie" placeholder="Nº Série *" />
+                <input type="date" id="edit_data" title="data" />
+                <input type="text" id="edit_modelo" placeholder="Modelo" />
+                <input type="text" id="edit_tecnico" placeholder="Técnico" />
+                <input type="text" id="edit_estado" placeholder="Estado" />
+                <textarea id="edit_descricao" placeholder="Descrição *"></textarea>
+                <input type="text" id="edit_situacao" placeholder="Situação" />
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="fecharModalEditar()">Cancelar</button>
+                    <button class="btn-primary" onclick="guardarEdicao()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal opções -->
+        <div class="modal_2" id="modalOptions">
+            <div class="options-content">
+                <span class="modal-close" onclick="fecharOpcoes()">&times;</span>
+                <h4>Escolha Ação</h4>
+                <button class="primary" onclick="abrirModalEditar()">Editar</button>
+                <button class="secondary" onclick="mostrarConfirmacao1()">Excluir</button>
+            </div>
+        </div>
+
+        <!-- Modal Confirmação 1 -->
+        <div class="modal_3" id="confirmStep1">
+            <div class="confirm-box">
+                <span class="modal-close" onclick="fecharConfirm()">&times;</span>
+                <h6>Tem certeza que deseja excluir este registo?</h6>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="fecharConfirm()">Cancelar</button>
+                    <button class="btn-primary" onclick="nextStep()">Sim</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Confirmação 2 -->
+        <div class="modal_3" id="confirmStep2">
+            <div class="confirm-box">
+                <h6>Esta ação é irreversível. Quer mesmo excluir?</h6>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="fecharConfirm()">Cancelar</button>
+                    <button class="btn-primary" onclick="excluirRegistro()">Sim</button>
+                </div>           
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
+        import { getDatabase, ref, onValue, set, update, remove } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js';
+
+        // Configurações Firebase
+        const firebaseConfig = {
+                apiKey: "AIzaSyAn5tuFL4ILf9vnaC9Y63LvqRfs8973S7E",
+                authDomain: "gestortech-7ce0b.firebaseapp.com",
+                databaseURL: "https://gestortech-7ce0b-default-rtdb.firebaseio.com",
+                projectId: "gestortech-7ce0b",
+                storageBucket: "gestortech-7ce0b.appspot.com",
+                messagingSenderId: "8206041679",
+                appId: "1:8206041679:web:e4d2f5bc64b573dd79e03a"
+            };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const tbody = document.getElementById("tbody");
+        
+        let registos = {};
+        let idSelecionado = null;
+
+        // Escutar dados Firebase
+        onValue(ref(db, 'avarias'), (snapshot) => {
+            registos = snapshot.val() || {};
+            atualizarTabela();
+        });
+
+        // Atualizar tabela HTML com dados do Firebase
+        function atualizarTabela() {
+            const tbody = document.getElementById("tbody");
+            tbody.innerHTML = '';
+            Object.keys(registos).forEach(id => {
+                const r = registos[id];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${id}</td>
+                    <td>${r["Nºcomputador"] || ''}</td>
+                    <td>${r.numero_serie || ''}</td>
+                    <td>${r.data || ''}</td>
+                    <td>${r.modelo || ''}</td>
+                    <td>${r.tecnico || ''}</td>
+                    <td>${r.estado || ''}</td>
+                    <td>${r.descricao_problema || ''}</td>
+                    <td>${r.Situacao_final || ''}</td>
+                `;
+                tr.ondblclick = () => {
+                    idSelecionado = id;
+                    abrirOpcoes();
+                };
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Modal opções
+        function abrirOpcoes() {
+            document.getElementById("modalOptions").style.display = "block";
+        }
+        window.fecharOpcoes = () => document.getElementById("modalOptions").style.display = "none";
+    
+
+        // Abrir modal Adicionar
+        window.abrirModalAdicionar = () => {
+            idSelecionado = null;
+            document.querySelectorAll("#modalAdicionar input, #modalAdicionar textarea").forEach(e => e.value = "");
+            document.getElementById("modalAdicionar").style.display = "flex";
+            document.getElementById("errorMsgAdicionar").innerText = "";
+        };
+
+        window.fecharModalAdicionar = () => {
+            document.getElementById("modalAdicionar").style.display = "none";
+        };
+
+        window.guardarNovo = () => {
+            const novo = {
+                "Nºcomputador": document.getElementById("add_num_computador").value.trim(),
+                numero_serie: document.getElementById("add_numero_serie").value.trim(),
+                data: document.getElementById("add_data").value,
+                modelo: document.getElementById("add_modelo").value,
+                tecnico: document.getElementById("add_tecnico").value,
+                estado: document.getElementById("add_estado").value,
+                descricao_problema: document.getElementById("add_descricao").value.trim(),
+                Situacao_final: document.getElementById("add_situacao").value
+            };
+
+            if (!novo["Nºcomputador"] || !novo.numero_serie || !novo.descricao_problema || !novo.data) {
+                document.getElementById("errorMsgAdicionar").innerText = "Preencha a data e todos os campos marcados com *";
+                return;
+            }
+
+            const novoId = Object.keys(registos).length
+                ? (Math.max(...Object.keys(registos).map(Number)) + 1).toString()
+                : "1";
+
+            set(ref(db, 'avarias/' + novoId), novo).then(() => {
+                fecharModalAdicionar();
+            });
+        };
+
+        // Abrir modal Editar
+        window.abrirModalEditar = () => {
+            if (!idSelecionado) return alert("Selecione um registo primeiro.");
+            const d = registos[idSelecionado];
+            if (!d) return alert("Registo não encontrado.");
+
+            document.getElementById("edit_num_computador").value = d["Nºcomputador"] || "";
+            document.getElementById("edit_numero_serie").value = d.numero_serie || "";
+            document.getElementById("edit_data").value = d.data || "";
+            document.getElementById("edit_modelo").value = d.modelo || "";
+            document.getElementById("edit_tecnico").value = d.tecnico || "";
+            document.getElementById("edit_estado").value = d.estado || "";
+            document.getElementById("edit_descricao").value = d.descricao_problema || "";
+            document.getElementById("edit_situacao").value = d.Situacao_final || d.observacoes || "";
+
+            fecharOpcoes();
+            document.getElementById("modalEditar").style.display = "flex";
+            document.getElementById("errorMsgEditar").innerText = "";
+        };
+
+        window.fecharModalEditar = () => {
+            document.getElementById("modalEditar").style.display = "none";
+        };
+
+        window.guardarEdicao = () => {
+            const atualizado = {
+                "Nºcomputador": document.getElementById("edit_num_computador").value.trim(),
+                numero_serie: document.getElementById("edit_numero_serie").value.trim(),
+                data: document.getElementById("edit_data").value,
+                modelo: document.getElementById("edit_modelo").value,
+                tecnico: document.getElementById("edit_tecnico").value,
+                estado: document.getElementById("edit_estado").value,
+                descricao_problema: document.getElementById("edit_descricao").value.trim(),
+                Situacao_final: document.getElementById("edit_situacao").value
+            };
+
+            if (!atualizado["Nºcomputador"] || !atualizado.numero_serie || !atualizado.descricao_problema) {
+                document.getElementById("errorMsgEditar").innerText = "Preencha todos os campos obrigatórios marcados com *.";
+                return;
+            }
+
+            if (idSelecionado) {
+                update(ref(db, 'avarias/' + idSelecionado), atualizado).then(() => {
+                    fecharModalEditar();
+                });
+            }
+        };
+
+        // Confirmar exclusão
+        window.mostrarConfirmacao1 = () => {
+            fecharOpcoes();
+            document.getElementById("confirmStep1").style.display = "block";
+        };
+
+        window.nextStep = () => {
+            document.getElementById("confirmStep1").style.display = "none";
+            document.getElementById("confirmStep2").style.display = "block";
+        };
+
+        window.fecharConfirm = () => {
+            document.getElementById("confirmStep1").style.display = "none";
+            document.getElementById("confirmStep2").style.display = "none";
+        };
+
+        window.excluirRegistro = () => {
+            if (!idSelecionado) return;
+            remove(ref(db, 'avarias/' + idSelecionado)).then(() => {
+                fecharConfirm();
+            });
+        };
+
+        // Exportar PDF
+        window.gerarPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const colunas = ["ID", "Nº Computador", "Nº Série", "Data", "Modelo", "Técnico", "Estado", "Descrição", "Situação"];
+            const dados = Object.entries(registos).map(([id, r]) => [
+                id,
+                r["Nºcomputador"] || '',
+                r.numero_serie || '',
+                r.data || '',
+                r.modelo || '',
+                r.tecnico || '',
+                r.estado || '',
+                r.descricao_problema || '',
+                r.Situacao_final || ''
+            ]);
+
+            doc.autoTable({
+                head: [colunas],
+                body: dados,
+                startY: 10,
+                styles: { fontSize: 8 },
+            });
+            doc.save('RegistosAvariados.pdf');
+        };
+
+        
+
+        // Exportar Excel
+        window.gerarExcel = () => {
+                const rows = [['ID', 'Nº Computador', 'Nº Série', 'Data', 'Modelo', 'Técnico', 'Estado', 'Descrição', 'Situação']];
+                for (const id in registos) {
+                    const d = registos[id];
+                    if (!d) continue;
+                     rows.push([
+                        id,
+                        d["Nºcomputador"] || "",
+                        d.numero_serie || "",
+                        d.data || "",
+                        d.modelo || "",
+                        d.tecnico || "",
+                        d.estado || "",
+                        d.descricao_problema || "",
+                        d.Situacao_final || d.observacoes || ""
+                    ]);
+                }
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+                XLSX.utils.book_append_sheet(wb, ws, "Avarias");
+                XLSX.writeFile(wb, "RegistosAvariados.xlsx");
+            };
+  
+            (function () {
+                const modo = localStorage.getItem("modo");
+                if (modo === "escuro") {
+                    document.documentElement.classList.add("modo-escuro");
+                }
+            })();
+
+            document.addEventListener("DOMContentLoaded", () => {
+  const body = document.body;
+  const toggle = document.getElementById("modoToggle");
+  const label = document.getElementById("modoLabel");
+
+  function aplicarModo(modo) {
+    if (modo === "escuro") {
+      body.classList.add("modo-escuro");
+      if (toggle) toggle.checked = true;
+      if (label) label.textContent = "Modo Escuro";
+    } else {
+      body.classList.remove("modo-escuro");
+      if (toggle) toggle.checked = false;
+      if (label) label.textContent = "Modo Claro";
+    }
+  }
+
+  const modoAtual = localStorage.getItem("modo") || "claro";
+  aplicarModo(modoAtual);
+
+  if (toggle) {
+    toggle.addEventListener("change", () => {
+      const novoModo = toggle.checked ? "escuro" : "claro";
+      localStorage.setItem("modo", novoModo);
+      aplicarModo(novoModo);
+    });
+  }
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GestorTech</title>
+        <link rel="stylesheet" href="Estilo.css">
+        <link rel="stylesheet" href="nav_links.css">  
+
+        <!-- jsPDF e autoTable -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+ 
+        <!-- SheetJS (Excel) -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+ 
+        <!-- Firebase compat para evitar problemas com módulos -->
+        <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+
+    </head>
+    <body>
+        <div class="topbar">
+            <div class="tp_esquerda">
+                <a href="https://www.esbocage.com/" class="logo-link">
+                    <img src="logo.webp" alt="Logo">
+                </a>
+            </div>
+            <div class="tp_direita">
+                <div class="modo-toggle">
+                    <span id="modoLabel" class="modo-label">Modo Claro</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modoToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="fechar-overlay" class="fechar-overlay"></div>
+
+        <div id="janela_conteudo" class="janela">
+            <button class="botao-fechar" onclick="fecharEntrada()">×</button>
+
+            <div id="entrar_conteudo" class="conteudo_login">
+                <h4>Entrar</h4>
+                <input type="text" placeholder="Utilizador">
+                <input type="password" placeholder="Palavra-passe">
+                <button onclick="iniciarSessao()">Entrar</button>
+                <p><a href="#" onclick="mostrarRegisto()">Não tem conta? Registe-se</a></p>
+                <p><a href="#" onclick="mostrarEsqueciSenha()">Esqueceu a Palavra-passe</a></p>
+            </div>
+        
+            <div id="registo_conteudo" class="conteudo_login">
+                <h4>Registo</h4>
+                <input type="text" placeholder="Nome de Utilizador">
+                <input type="email" placeholder="Email">
+                <input type="password" placeholder="Palavra-passe">
+                <input type="password" placeholder="Confirmar Palavra-passe">
+                <button onclick="criarConta()">Criar Conta</button>
+                <p><a href="#" onclick="mostrarLogin()">Já tem conta? Entrar</a></p>
+            </div>
+
+            <div id="esqueci_senha_conteudo" class="conteudo_login">
+                <h4>Esqueci a Palavra-passe</h4>
+                <p>Insira o seu email para recuperar a sua palavra-passe.</p>
+                <input type="email" placeholder="Email">
+                <button onclick="recuperarSenha()">Enviar</button>
+                <p><a href="#" onclick="mostrarLogin()">Voltar ao Login</a></p>
+            </div>
+        </div>
+        <div class="sidebar">
+            <h2 class="sidebar-title">GestorTech</h2>
+            <ul>
+                <li><a href="Início.html">Início</a></li>
+                <li><a href="Histórico.html">Histórico</a></li>
+                <li><a href="Avariados.html">Avarias</a></li>
+                <li><a href="Abatidos.html">Abatidos</a></li>
+            </ul>
+        </div>
+        <main>
+            <div class="titulos_tab">Histórico de Abates e Avarias</div>
+            <button class="btn_tab" id="exportarPdfBtn">Exportar PDF</button>
+            <button class="btn_tabelas" id="exportarExcelBtn">Exportar Excel</button>
+        
+            <div class="pesquisa">
+                <input type="text" id="filtroPesquisa" placeholder="Pesquisar por marca, modelo, série, problema ou data...">
+                <select id="filtroTipo">
+                <option value="">Todos</option>
+                <option value="Abatido">Abatido</option>
+                <option value="Avaria">Avaria</option>
+            </select>
+            </div>
+        
+            <div class="tabela_conteudo">
+                <table class="tabelas">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Marca / Modelo</th>
+                        <th>Nº Série</th>
+                        <th>Problema / Observações</th>
+                        <th>Estado</th>
+                        <th>Data</th>
+                    </tr>
+                    <tbody id="tabela-historico"></tbody>
+                </table> 
+            </div>
+        </main>
+        <script type="module">
+
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+            import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyAn5tuFL4ILf9vnaC9Y63LvqRfs8973S7E",
+                authDomain: "gestortech-7ce0b.firebaseapp.com",
+                databaseURL: "https://gestortech-7ce0b-default-rtdb.firebaseio.com",
+                projectId: "gestortech-7ce0b",
+                storageBucket: "gestortech-7ce0b.appspot.com",
+                messagingSenderId: "8206041679",
+                appId: "1:8206041679:web:e4d2f5bc64b573dd79e03a"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            const tabela = document.getElementById("tabela-historico");
+            const filtroPesquisa = document.getElementById("filtroPesquisa");
+            const filtroTipo = document.getElementById("filtroTipo");
+
+            let dadosTotais = [];
+
+            function limpar(valor) {
+                return (!valor || valor.toLowerCase() === "null") ? "" : valor;
+            }
+
+            function renderizarTabela(dados) {
+                tabela.innerHTML = "";
+                dados.forEach(item => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${item.tipo}</td>
+                        <td>${item.modelo}</td>
+                        <td>${item.serie}</td>
+                        <td>${item.problema}</td>
+                        <td>${item.estado}</td>
+                        <td>${item.data}</td>
+                    `;
+                    tabela.appendChild(row);
+                });
+            }
+
+            function aplicarFiltros() {
+                const texto = filtroPesquisa.value.toLowerCase();
+                const tipo = filtroTipo.value;
+
+                const filtrados = dadosTotais.filter(item => {
+                    const textoCompleto = `${item.tipo} ${item.modelo} ${item.serie} ${item.problema} ${item.estado} ${item.data}`.toLowerCase();
+                    const condTexto = textoCompleto.includes(texto);
+                    const condTipo = tipo === "" || item.tipo === tipo;
+                    return condTexto && condTipo;
+                });
+                renderizarTabela(filtrados);
+            }
+
+            filtroPesquisa.addEventListener("input", aplicarFiltros);
+            filtroTipo.addEventListener("change", aplicarFiltros);
+
+            function carregarDados() {
+                dadosTotais = [];
+
+                onValue(ref(db, 'abatidos'), (snapshot) => {
+                    dadosTotais = dadosTotais.filter(item => item.tipo !== "Abatido");
+                    const data = snapshot.val();
+                    if (data) {
+                        Object.values(data).forEach(item => {
+                            dadosTotais.push({
+                                tipo: "Abatido",
+                                modelo: `${limpar(item.Marca)} / ${limpar(item.Modelo)}`,
+                                serie: limpar(item["Nº_serie"]),
+                                problema: limpar(item.Observações),
+                                estado: "",
+                                data: limpar(item.data_abatimento)
+                            });
+                        });
+                    }
+                    atualizarEFiltrar();
+                });
+
+                onValue(ref(db, 'avarias'), (snapshot) => {
+                    dadosTotais = dadosTotais.filter(item => item.tipo !== "Avaria");
+                    const data = snapshot.val();
+                    if (data) {
+                        Object.values(data).forEach(item => {
+                            dadosTotais.push({
+                                tipo: "Avaria",
+                                modelo: limpar(item.modelo),
+                                serie: limpar(item.numero_serie),
+                                problema: limpar(item.descricao_problema),
+                                estado: limpar(item.estado),
+                                data: limpar(item.data)
+                            });
+                        });
+                    }
+                    atualizarEFiltrar();
+                });
+            }
+
+            function atualizarEFiltrar() {
+            // Ordenar por data decrescente (mais recente primeiro)
+            dadosTotais.sort((a, b) => new Date(b.data) - new Date(a.data));
+            aplicarFiltros();
+            }
+
+            carregarDados();
+
+            // Exportar PDF
+            document.getElementById("exportarPdfBtn").addEventListener("click", () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(16);
+                doc.text("Histórico de Abates e Avarias", 14, 20);
+
+                const headers = Array.from(document.querySelectorAll("thead th")).map(th => th.innerText);
+                const body = Array.from(document.querySelectorAll("tbody tr")).map(tr =>
+                    Array.from(tr.querySelectorAll("td")).map(td => td.innerText)
+                );
+
+                doc.autoTable({
+                    startY: 30,
+                    head: [headers],
+                    body: body,
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [46, 132, 73] },
+                    theme: 'striped'
+                });
+
+                doc.save("Historico.pdf");
+            });
+
+            // Exportar Excel
+            document.getElementById("exportarExcelBtn").addEventListener("click", () => {
+                const headers = Array.from(document.querySelectorAll("thead th")).map(th => th.innerText);
+                const linhas = Array.from(document.querySelectorAll("tbody tr")).map(tr =>
+                    Array.from(tr.querySelectorAll("td")).map(td => td.innerText)
+                );
+
+                const dadosXLSX = [headers, ...linhas];
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(dadosXLSX);
+                XLSX.utils.book_append_sheet(wb, ws, "Histórico");
+                XLSX.writeFile(wb, "Historico.xlsx");
+            });
+
+            (function () {
+                const modo = localStorage.getItem("modo");
+                if (modo === "escuro") {
+                    document.documentElement.classList.add("modo-escuro");
+                }
+            })();
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const body = document.body;
+                const toggle = document.getElementById("modoToggle");
+                const label = document.getElementById("modoLabel");
+
+                function aplicarModo(modo) {
+                    if (modo === "escuro") {
+                    body.classList.add("modo-escuro");
+                    if (toggle) toggle.checked = true;
+                    if (label) label.textContent = "Modo Escuro";
+                    } else {
+                        body.classList.remove("modo-escuro");
+                        if (toggle) toggle.checked = false;
+                        if (label) label.textContent = "Modo Claro";
+                    }
+                }
+
+                const modoAtual = localStorage.getItem("modo") || "claro";
+                aplicarModo(modoAtual);
+
+                if (toggle) {
+                    toggle.addEventListener("change", () => {
+                        const novoModo = toggle.checked ? "escuro" : "claro";
+                        localStorage.setItem("modo", novoModo);
+                        aplicarModo(novoModo);
+                    });
+                }
+            });
+
+        </script>
+        <footer>
+            <div class="footer-container">
+                <div class="footer-content">
+                    <p>&copy; 2023 GestorTech. Todos os direitos reservados.</p>
+                    <p>Desenvolvido por: ESBOCAGE</p>
+                </div>
+                <div class="media-links">
+                    <a href="https://www.facebook.com/escolasecundariadubocageoficial/">
+                        <img src="facebook.png" alt="Facebook">
+                    </a>
+                    <a href="https://www.instagram.com/esbocage/">
+                        <img src="Instagram.png" alt="Instagram">
+                    </a>
+                    <a href="https://www.youtube.com/@ESduBocage">
+                        <img src="Youtube.png" alt="YouTube">
+                    </a>
+                </div>
+            </div>
+        </footer>  
+    </body>
+</html>

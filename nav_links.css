@@ -1,0 +1,631 @@
+.topbar {
+    background-color: #ccdcd4;
+    padding: 10px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 200px; /* Largura da sidebar */
+    right: 0;
+    z-index: 10; 
+}
+
+.tp_direita {
+    display: flex;
+    gap: 20px;
+}
+
+.topbar a {
+    text-decoration: none;
+    color: #3b3b3b;
+    font-size: 16px;
+    padding: 8px 12px;
+}
+
+.tp-direita a:hover {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+.botoes {
+    background-color: #539053da;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    font-size: 17.5px;
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+.botoes_2 {
+    background-color: #539053da;
+    color: white;
+    margin-left: 680px;
+    padding: 10px 20px;
+    border: none;
+    font-size: 17.5px;
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+.botoes_3 {
+    background-color: #539053da;
+    color: white;
+    margin-top: 30px;
+    margin-left: 830px;
+    padding: 10px 20px;
+    border: none;
+    font-size: 17.5px;
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+.botoes_4 {
+    background-color: #539053da;
+    color: white;
+    text-decoration: none;
+    margin-bottom: 10px;
+    margin-left: 670px;
+    padding: 10px 20px;
+    border: none;
+    font-size: 17.5px;
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+.botoes:hover, .botoes_2:hover, 
+.botoes_3:hover, .botoes_4:hover{
+    background-color: #6b8f5c;
+    transition: background-color 0.3s;
+}
+
+.botoes:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.titulo{
+    text-align: left;
+    text-align: center;
+    font-size: 23px;
+    font-weight: bold;
+    color: #444;
+    margin-top: 15.5px;
+    margin-bottom: 7px;
+    width: 100%;
+}
+
+.sidebar {
+    position: fixed; 
+    background-color: #408d5a;
+    width: 200px; 
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 100; 
+}
+
+.sidebar-title {
+    text-align: left;
+    font-size: 23px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    text-align: center;
+    padding: 0;
+    width: 100%;
+}
+
+.sidebar li a {
+    display: block;
+    padding: 20px 50px;
+    font-weight: bold;
+    font-size: 20px;
+    text-decoration: none;
+    margin-bottom: 10px;
+    background-color: #84b494;
+    border-radius: 5px;
+    color: #ffffff;
+    transition: 0.3s;
+}
+
+.sidebar li a:hover {
+    background-color: #acccbc;
+    border-radius: 5px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+}
+
+h1, h2, h3 {
+    font-weight: bold;
+    margin: 18.5px 0;
+    margin-left: 30px;
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
+    text-align: left;
+}
+
+h1 {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 22px;
+    color: #333;
+    width: 100%;
+    padding-bottom: 10px;
+    margin-bottom: 9px;
+}
+
+h3 {
+    font-size: 20px;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+h4 {
+    font-size: 22px;
+    color: #777;
+    margin-bottom: 9px; 
+    text-align: center;
+}
+
+img {
+    height: 60px;
+    padding: 0px 5px;
+}
+
+main {
+    margin-left: 185px; /* Espaço para a barra lateral */
+    margin-top: 105px;
+    padding: 30px;
+    min-width: 700px;
+    max-width: 1050px;
+    height: auto;
+    min-height: 100vh; /* Altura total da tela */
+}
+
+.geral {
+    background-color:rgba(247, 247, 247, 0.932);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+}
+
+.titulos{
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 15px;
+    margin-top: 10px;
+    margin-left: 40px;
+    text-align: left;
+    font-weight: bold;
+}
+
+p {
+    font-size: 16px;
+    margin: 6px 0;
+    margin-left: 36px;
+    color: #666;
+    line-height: 1.7;
+}
+
+p.lista::before {
+    content: "•";
+    color: #000;
+    margin-left: 12PX; 
+    margin-right: 8px;
+    vertical-align: middle;
+    display: inline-block;/* Ajusta a posição vertical do ponto */
+    font-size: 20pt;
+    line-height: 1;
+    font-weight: bold;
+}
+
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+footer {
+    background-color: #ccdcd4;
+    padding: 10px 40px;
+    margin-right: 0px;
+    margin-left: 239Px; 
+    color: #666666;
+    font-size: 14px;
+}
+
+.footer-content p {
+    margin: 4px 0;
+    gap: 10px;
+}
+
+.media-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.media-links img {
+    height: 25px;
+    margin: 0 4px;
+    transition: transform 0.2s;
+}
+
+.media-links img:hover {
+    transform: scale(1.1);
+}
+
+.tabela_conteudo {
+    overflow-y: auto;
+    max-height: 400px; /* Altura máxima da tabela */
+    max-width: 100%;
+    overflow-x: auto;  /* largura que quero limitar */
+    margin-top: 12px;
+    padding-bottom: 24px;
+}
+
+
+.tabelas {
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-left: 70px;
+    table-layout: auto; /* ou 'fixed', conforme necessidade */
+    width: 100%; /* melhor que auto para responsividade */
+    max-width: 100%;
+    border-collapse: collapse;
+}
+
+.tabelas th{
+    background-color: #2e793d;
+    color: rgb(240, 238, 234);
+    font-weight: bold;
+    padding: 12px;
+    border-bottom: 2px solid #ddd;
+}
+
+.tabelas td {
+    text-align: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+}
+
+.tabelas tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.tabelas tr:hover td {
+    background-color: #f1f1f1;
+}
+
+body.modo-escuro {
+  background-color: #121212;
+  color: #E0E0E0;
+}
+
+body.modo-escuro .geral {
+  background-color: #1E1E1E;
+  color: #E0E0E0;
+}
+
+body.modo-escuro .topbar,
+body.modo-escuro footer {
+  background-color: #1E1E1E;
+  color: #CCCCCC;
+}
+
+body.modo-escuro .sidebar {
+  background-color: #1A1A1A;
+}
+
+body.modo-escuro .sidebar li a {
+  background-color: #2C2C2C;
+  color: #E0E0E0;
+}
+
+body.modo-escuro .sidebar li a:hover {
+  background-color: #383838;
+}
+
+body.modo-escuro .tabelas th {
+  background-color: #052807;
+  color: #F1F8E9;
+}
+
+body.modo-escuro .tabelas td {
+  background-color: #1E1E1E;
+  color: #CCCCCC;
+}
+
+body.modo-escuro .tabelas tr:nth-child(even) {
+  background-color: #2A2A2A;
+}
+
+body.modo-escuro .tabelas tr:hover td {
+  background-color: #333333;
+}
+
+body.modo-escuro .botoes,
+body.modo-escuro .botoes_1,
+body.modo-escuro .botoes_2,
+body.modo-escuro .botoes_3,
+body.modo-escuro .botoes_4,
+body.modo-escuro .btn_tab,
+body.modo-escuro .btn_tabelas,
+body.modo-escuro .btn-primary,
+body.modo-escuro .primary,
+body.modo-escuro #btnEditChoice
+body.modo-escuro .tabelas{
+  background-color: #092f0a;
+  color: white;
+}
+
+body.modo-escuro .botoes:hover,
+body.modo-escuro .btn_tab:hover,
+body.modo-escuro .btn_tabelas:hover,
+body.modo-escuro .btn-primary:hover,
+body.modo-escuro .primary:hover,
+body.modo-escuro #btnEditChoice:hover {
+  background-color: #236f26;
+}
+
+body.modo-escuro input,
+body.modo-escuro select,
+body.modo-escuro textarea {
+  background-color: #222;
+  color: #f1f1f1;
+  border: 1px solid #555;
+}
+
+/* FORMULÁRIOS */
+body.modo-escuro input,
+body.modo-escuro select,
+body.modo-escuro textarea {
+  background-color: #2a2a2a;
+  color: #f0f0f0;
+  border: 1px solid #555;
+}
+
+body.modo-escuro input::placeholder,
+body.modo-escuro textarea::placeholder {
+  color: #999;
+}
+
+/* TEXTOS GERAIS */
+body.modo-escuro p,
+body.modo-escuro h2,
+body.modo-escuro h3,
+body.modo-escuro h4,
+body.modo-escuro h6,
+body.modo-escuro .titulos,
+body.modo-escuro .titulos_tab,
+body.modo-escuro .contagem,
+body.modo-escuro .card-contagem h4,
+body.modo-escuro .card-contagem p,
+body.modo-escuro label,
+body.modo-escuro li a {
+  color: #dddddd;
+}
+
+/* ESPECÍFICO PARA .modo-label */
+body.modo-escuro .modo-label {
+  color: #dddddd;
+}
+
+body.modo-escuro .conteudo_login, body.modo-escuro .janela  {
+    color: #ffffff;
+    background-color: #444242;
+}
+
+body.modo-escuro .conteudo_login a  {
+    color: #c4bebe;
+    background-color: #444242;
+}
+
+body.modo-escuro .conteudo_login a:hover  {
+    color: #ffffff;
+    background-color: #444242;
+}
+
+/* AJUSTES ADICIONAIS EM CARDS */
+body.modo-escuro .card-contagem {
+  background-color: #2c2c2c;
+  color: #ffffff;
+}
+
+/* BOTÕES ESCUROS MAIS UNIFORMES */
+body.modo-escuro .btn_enviar,
+body.modo-escuro #btnEditChoice,
+body.modo-escuro #btnDeleteChoice,
+body.modo-escuro .secondary,
+body.modo-escuro .guardar_def,
+body.modo-escuro .confirmar_def,
+body.modo-escuro .resetar_def,
+body.modo-escuro .botoes {
+  background-color: #104012;
+  color: white;
+}
+
+body.modo-escuro .btn_enviar:hover,
+body.modo-escuro .guardar_def:hover,
+body.modo-escuro .confirmar_def:hover,
+body.modo-escuro .resetar_def:hover,
+body.modo-escuro .botoes:hover {
+  background-color: #28852b;
+}
+
+body.modo-escuro h1,
+body.modo-escuro h2,
+body.modo-escuro h3,
+body.modo-escuro h4,
+body.modo-escuro h6,
+body.modo-escuro p,
+body.modo-escuro .titulos,
+body.modo-escuro .titulos_tab,
+body.modo-escuro .contagem,
+body.modo-escuro label,
+body.modo-escuro li a {
+  color: #e0e0e0;
+}
+
+body.modo-escuro h4 {
+  color: #ffffff;
+}
+
+body.modo-escuro .media-links {
+  filter: invert(1);
+}
+
+/* Modo escuro: formulários */
+body.modo-escuro .modal input, body.modo-escuro .modal_1 input, body.modo-escuro .modal_2 input, body.modo-escuro .modal_3 input,
+body.modo-escuro .modal select, body.modo-escuro .modal_1 select, body.modo-escuro .modal_2 select, body.modo-escuro .modal_3 select,
+body.modo-escuro .modal textarea, body.modo-escuro .modal_1 textarea, body.modo-escuro .modal_2 textarea, body.modo-escuro .modal_3 textarea{
+  background-color: #1f1f1f;
+  color: #f1f1f1;
+  border: 1px solid #444;
+}
+
+/* Placeholders claros */
+body.modo-escuro input::placeholder,
+body.modo-escuro textarea::placeholder {
+  color: #aaaaaa;
+}
+
+/*  MODO ESCURO: MODAIS */
+body.modo-escuro .modal,
+body.modo-escuro .modal_1,
+body.modo-escuro .modal_2,
+body.modo-escuro .modal_3,
+body.modo-escuro #modalChoose {
+  background-color: #1f1f1f;
+  color: #f1f1f1;
+  border: 1px solid #333;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+}
+
+/* Títulos dos modais */
+body.modo-escuro .tit_modal,
+body.modo-escuro .tit_modal_1 {
+  color: #f0f0f0;
+}
+
+/* Inputs e textareas dentro do modal */
+body.modo-escuro .modal input[type="text"],
+body.modo-escuro .modal input[type="date"],
+body.modo-escuro .modal input[type="number"],
+body.modo-escuro .modal textarea {
+  background-color: #2a2a2a;
+  color: #f1f1f1;
+  border: 1px solid #555;
+}
+
+/* Placeholders */
+body.modo-escuro .modal input::placeholder,
+body.modo-escuro .modal textarea::placeholder {
+  color: #aaaaaa;
+}
+
+/* Botões nos modais */
+body.modo-escuro .btn-primary,
+body.modo-escuro .primary, .secondary
+body.modo-escuro #btnEditChoice,
+body.modo-escuro #btnDeleteChoice {
+  background-color: #155218;
+  color: white;
+}
+
+body.modo-escuro .btn-primary:hover,
+body.modo-escuro .primary:hover,
+body.modo-escuro #btnEditChoice:hover,
+body.modo-escuro #btnDeleteChoice:hover {
+  background-color: #3b913e;
+}
+
+/* Botão de fechar */
+body.modo-escuro .modal-close {
+  color: #dddddd;
+  background-color: transparent;
+}
+
+body.modo-escuro .modal-close:hover {
+  color: red;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin-left: 15px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Estilo da linha da alavanca */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+/* Estilo do botão dentro da alavanca */
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+/* Estado ativo (modo escuro) */
+input:checked + .slider {
+  background-color: #2b6a2e;
+}
+
+input:checked + .slider::before {
+  transform: translateX(26px);
+}
+
+/* Forma arredondada */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round::before {
+  border-radius: 50%;
+}
+

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GestorTech</title>
+    <link rel="stylesheet" href="Estilo.css">
+    <link rel="stylesheet" href="nav_links.css">  
+    <script src="Estilo.js"></script>
+
+  <!-- jsPDF e autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+ 
+  <!-- SheetJS (Excel) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+ 
+  <!-- Firebase compat para evitar problemas com módulos -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="tp_esquerda">
+      <a href="https://www.esbocage.com/" class="logo-link">
+         <img src="logo.webp" alt="Logo">
+      </a>
+    </div>
+    <div class="tp_direita">
+      <div class="modo-toggle">
+        <span id="modoLabel" class="modo-label">Modo Claro</span>
+        <label class="switch">
+          <input type="checkbox" id="modoToggle" title="label" />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <div id="fechar-overlay" class="fechar-overlay"></div>
+
+    <div id="janela_conteudo" class="janela">
+      <button class="botao-fechar" onclick="fecharEntrada()">×</button>
+
+      <div id="entrar_conteudo" class="conteudo_login">
+        <h4>Entrar</h4>
+        <input type="text" placeholder="Utilizador">
+        <input type="password" placeholder="Palavra-passe">
+        <button onclick="iniciarSessao()">Entrar</button>
+        <p><a href="#" onclick="mostrarRegisto()">Não tem conta? Registe-se</a></p>
+        <p><a href="#" onclick="mostrarEsqueciSenha()">Esqueceu a Palavra-passe</a></p>
+      </div>
+    
+      <div id="registo_conteudo" class="conteudo_login">
+        <h4>Registro</h4>
+        <input type="text" placeholder="Nome de Utilizador">
+        <input type="email" placeholder="Email">
+        <input type="password" placeholder="Palavra-passe">
+        <input type="password" placeholder="Confirmar Palavra-passe">
+        <button onclick="criarConta()">Criar Conta</button>
+        <p><a href="#" onclick="mostrarLogin()">Já tem conta? Entrar</a></p>
+      </div>
+
+      <div id="esqueci_senha_conteudo" class="conteudo_login">
+        <h4>Esqueci a Palavra-passe</h4>
+        <p>Insira o seu email para recuperar a sua palavra-passe.</p>
+        <input type="email" placeholder="Email">
+        <button onclick="recuperarSenha()">Enviar</button>
+        <p><a href="#" onclick="mostrarLogin()">Voltar ao Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h2 class="sidebar-title">GestorTech</h2>
+    <ul>
+      <li><a href="Início.html">Início</a></li>
+      <li><a href="Histórico.html">Histórico</a></li>
+      <li><a href="Avariados.html">Avarias</a></li>
+      <li><a href="Abatidos.html">Abatidos</a></li>
+    </ul>
+  </div>
+
+  <main>
+    <div class="geral_1">
+      <div class="titulos_tab">Lista de Equipamentos Abatidos</div>
+        <button class="btn_tab" id="btnAddNew">+ Novo Registo</button>
+        <button class="btn_tabelas" id="btnExportPDF">Exportar PDF</button>
+        <button class="btn_tabelas" id="btnExportExcel">Exportar Excel</button>
+          <div class="tabela_conteudo">
+            <table class="tabelas" id="abatidos-table">
+              <thead>
+                <tr>
+                <th>Id</th>
+                <th>Tipo Componente</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Nº Série</th>
+                <th>Número de Componentes</th>
+                <th>Data Abatimento</th>
+                <th>Observações</th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="8">Carregando dados...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalAdd" class="modal">
+      <div class="modal-header">
+        <h6>+ Novo Registo</h6>
+      <span class="modal-close" data-close="modalAdd">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="error-msg" id="add-error"></div>
+        <input type="text" id="addTipoComponente" placeholder="Tipo de Componente" />
+        <input type="text" id="addMarca" placeholder="Marca"/>
+        <input type="text" id="addModelo" placeholder="Modelo"/>
+        <input type="text" id="addNumSerie" placeholder="Nº de Série"/>
+        <input type="number" id="addNumComponentes" placeholder="Número de Componentes"/>
+        <input type="date" id="addDataAbatimento" title="data de Abatimento"/>
+        <textarea id="addObservacoes" placeholder="Observações"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close="modalAdd">Cancelar</button>
+        <button class="btn-primary" id="btnSaveAdd">Guardar</button>
+      </div>
+    </div>
+ 
+    <!-- Modal Escolha Editar/Apagar -->
+    <div id="modalChoose" class="modal_1">
+      <div class="modal-header" id="chooseHeader" >
+        <h4>Escolha Ação</h4>
+        <span class="modal-close" data-close="modalChoose">&times;</span>
+      </div>
+      <div class="modal-body">
+        <button id="btnEditChoice">Editar</button>
+        <button id="btnDeleteChoice">Excluir</button>
+      </div>
+    </div>
+ 
+    <!-- Modal Editar -->
+    <div id="modalEdit" class="modal">
+      <div class="modal-header">
+        <h6>Editar Registo</h6>
+      <span class="modal-close" data-close="modalEdit">&times;</span>
+    </div>
+      <div class="modal-body">
+        <div class="error-msg" id="edit-error"></div>
+          <input type="text" id="editTipoComponente"placeholder="Tipo de componente"/>
+            <input type="text" id="editMarca" placeholder="Marca"/>
+            <input type="text" id="editModelo" placeholder="Modelo"/>
+          <input type="text" id="editNumSerie" placeholder="Nº Série"/>
+          <input type="number" id="editNumComponentes" placeholder="Número Componentes"/>
+          <input type="date" id="editDataAbatimento" placeholder="Data Abatimento"/>
+          <textarea  id="editObservacoes" placeholder="Observações"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" data-close="modalEdit">Cancelar</button>
+          <button class="btn-primary" id="btnSaveEdit">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Apagar (duplo confirmação) -->
+    <div id="modalDelete" class="modal_3">
+      <div class="modal-header">
+        <span class="modal-close" data-close="modalDelete">&times;</span>
+      </div>
+      <div class="modal-body">
+        <h6 id="delete-msg-1">Tem a certeza que quer excluir este registo?</h6>
+        <h6 id="delete-msg-2">Esta ação é irreversível. Quer mesmo excluir?</h6>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close="modalDelete">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmDelete">Sim</button>
+      </div>
+    </div>
+ 
+    <script>
+      // Config Firebase compat (seu config)
+      const firebaseConfig = {
+        apiKey: "AIzaSyAn5tuFL4ILf9vnaC9Y63LvqRfs8973S7E",
+        authDomain: "gestortech-7ce0b.firebaseapp.com",
+        databaseURL: "https://gestortech-7ce0b-default-rtdb.firebaseio.com",
+        projectId: "gestortech-7ce0b",
+        storageBucket: "gestortech-7ce0b.appspot.com",
+        messagingSenderId: "8206041679",
+        appId: "1:8206041679:web:e4d2f5bc64b573dd79e03a"
+      };
+ 
+      // Inicializar Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+ 
+      const tabelaBody = document.querySelector("#abatidos-table tbody");
+ 
+      let dados = {};
+      let idSelecionado = null; // id da linha selecionada para editar ou apagar
+      let deleteStep = 0; // Contador de confirmações de apagar
+ 
+      // Função para mostrar texto ou traço
+      function mostrar(v) {
+        if (!v || v.toString().toLowerCase() === "null") return "  ";
+        return v;
+      }
+ 
+      // Ler dados Firebase e atualizar tabela
+      function atualizarTabela() {
+        const refAbatidos = db.ref('abatidos');
+        refAbatidos.on('value', (snapshot) => {
+         dados = snapshot.val() || {};
+          tabelaBody.innerHTML = "";
+          const keys = Object.keys(dados).sort((a,b) => Number(a) - Number(b));
+          if (keys.length === 0) {
+            tabelaBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Sem dados</td></tr>';
+            return;
+          }
+          for (const key of keys) {
+            const item = dados[key];
+            const tr = document.createElement('tr');
+            tr.dataset.id = key;
+            tr.innerHTML = `
+              <td>${mostrar(item.id_abatidos)}</td>
+              <td>${mostrar(item.Tipo_componente)}</td>
+              <td>${mostrar(item.Marca)}</td>
+              <td>${mostrar(item.Modelo)}</td>
+              <td>${mostrar(item["Nº_serie"])}</td>
+              <td>${mostrar(item.Número_componentes)}</td>
+              <td>${mostrar(item.data_abatimento)}</td>
+              <td>${mostrar(item.Observações)}</td>
+            `;
+            tabelaBody.appendChild(tr);
+          }
+      });
+      }
+ 
+      // Inicializa tabela
+      atualizarTabela();
+ 
+      // EXPORTAR PDF
+      document.getElementById("btnExportPDF").addEventListener("click", () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.autoTable({ html: '#abatidos-table' });
+        doc.save('RegistosAbatidos.pdf');
+      });
+ 
+      // EXPORTAR EXCEL
+      document.getElementById("btnExportExcel").addEventListener("click", () => {
+        const table = document.getElementById('abatidos-table');
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Abatidos" });
+        XLSX.writeFile(wb, 'RegistosAbatidos.xlsx');
+      });
+ 
+      // ABRIR MODAL FUNÇÃO
+      function abrirModal(idModal) {
+        document.getElementById(idModal).style.display = "block";
+      }
+      // FECHAR MODAL FUNÇÃO
+      function fecharModal(idModal) {
+        document.getElementById(idModal).style.display = "none";
+      }
+      // FECHAR TODOS MODAIS
+      function fecharTodosModais() {
+        ['modalAdd','modalChoose','modalEdit','modalDelete'].forEach(fecharModal);
+      }
+ 
+      // FECHAR AO CLICAR NO "X" ou CANCELAR
+      document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const modalId = e.target.dataset.close;
+          fecharModal(modalId);
+          if(modalId === 'modalDelete') deleteStep = 0; // resetar confirmação delete
+        });
+      });
+      document.querySelectorAll('.btn-secondary').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const modal = e.target.closest('.modal, .modal_1, .modal_3');
+          if(modal) {
+            modal.style.display = 'none';
+            if(modal.id === 'modalDelete') deleteStep = 0;
+          }
+        });
+      });
+ 
+      // BOTÃO ADICIONAR NOVO
+      document.getElementById("btnAddNew").addEventListener("click", () => {
+        // limpar campos
+        document.getElementById("addTipoComponente").value = "";
+        document.getElementById("addMarca").value = "";
+        document.getElementById("addModelo").value = "";
+        document.getElementById("addNumSerie").value = "";
+        document.getElementById("addNumComponentes").value = "";
+        document.getElementById("addDataAbatimento").value = "";
+        document.getElementById("addObservacoes").value = "";
+        document.getElementById("add-error").style.display = "none";
+        abrirModal('modalAdd');
+      });
+ 
+      // SALVAR NOVO REGISTRO
+      document.getElementById("btnSaveAdd").addEventListener("click", () => {
+        const tipo = document.getElementById("addTipoComponente").value.trim();
+        const marca = document.getElementById("addMarca").value.trim();
+        const modelo = document.getElementById("addModelo").value.trim();
+        const numSerie = document.getElementById("addNumSerie").value.trim();
+        const numComp = document.getElementById("addNumComponentes").value.trim();
+        const dataAbat = document.getElementById("addDataAbatimento").value;
+        const obs = document.getElementById("addObservacoes").value.trim();
+ 
+        // Validar obrigatórios - mínimo 1 dos campos obrigatórios preenchido
+        if (tipo === "" && dataAbat === "") {
+          const erroEl = document.getElementById("add-error");
+          erroEl.textContent = "Por favor preencha pelo menos 'Tipo Componente' ou 'Data Abatimento'.";
+          erroEl.style.display = "block";
+          return;
+        }
+ 
+        // Obter maior id e incrementar
+        let maxId = 0;
+        for (const k in dados) {
+          if (dados[k].id_abatidos && Number(dados[k].id_abatidos) > maxId) {
+            maxId = Number(dados[k].id_abatidos);
+          }
+        }
+        const novoId = maxId + 1;
+ 
+        // Criar objeto
+        const novoRegistro = {
+          id_abatidos: novoId,
+          Tipo_componente: tipo,
+          Marca: marca,
+          Modelo: modelo,
+          "Nº_serie": numSerie,
+          Número_componentes: numComp,
+          data_abatimento: dataAbat,
+          Observações: obs
+        };
+ 
+        // Salvar no Firebase
+        db.ref('abatidos/' + novoId).set(novoRegistro)
+          .then(() => {
+            fecharModal('modalAdd');
+          })
+        .catch(err => alert("Erro ao salvar: " + err.message));
+      });
+ 
+      // DUPLO CLIQUE NA LINHA PARA ESCOLHA EDITAR/APAGAR
+      tabelaBody.addEventListener('dblclick', (event) => {
+        let tr = event.target.closest('tr');
+        if (!tr || !tr.dataset.id) return;
+        idSelecionado = tr.dataset.id;
+        
+        abrirModal('modalChoose');
+      });
+ 
+      // BOTÕES DO MODAL ESCOLHA
+      document.getElementById('btnEditChoice').addEventListener('click', () => {
+        if (!idSelecionado) return;
+        
+        // Carregar dados para modal editar
+        const item = dados[idSelecionado];
+        if (!item) return alert("Erro: registro não encontrado");
+ 
+        document.getElementById("editTipoComponente").value = item.Tipo_componente || "";
+        document.getElementById("editMarca").value = item.Marca || "";
+        document.getElementById("editModelo").value = item.Modelo || "";
+        document.getElementById("editNumSerie").value = item["Nº_serie"] || "";
+        document.getElementById("editNumComponentes").value = item.Número_componentes || "";
+        document.getElementById("editDataAbatimento").value = item.data_abatimento || "";
+        document.getElementById("editObservacoes").value = item.Observações || "";
+        document.getElementById("edit-error").style.display = "none";
+ 
+        fecharModal('modalChoose');
+        abrirModal('modalEdit');
+      });
+ 
+      document.getElementById('btnDeleteChoice').addEventListener('click', () => {
+        if (!idSelecionado) return;
+        deleteStep = 0;
+        document.getElementById('delete-msg-1').style.display = "block";
+        document.getElementById('delete-msg-2').style.display = "none";
+        fecharModal('modalChoose');
+        abrirModal('modalDelete');
+      });
+ 
+      // SALVAR ALTERAÇÕES EDITAR
+      document.getElementById('btnSaveEdit').addEventListener('click', () => {
+        if (!idSelecionado) return;
+        
+        const tipo = document.getElementById("editTipoComponente").value.trim();
+        const marca = document.getElementById("editMarca").value.trim();
+        const modelo = document.getElementById("editModelo").value.trim();
+        const numSerie = document.getElementById("editNumSerie").value.trim();
+        const numComp = document.getElementById("editNumComponentes").value.trim();
+        const dataAbat = document.getElementById("editDataAbatimento").value;
+        const obs = document.getElementById("editObservacoes").value.trim();
+ 
+        // Validar obrigatórios
+        if (tipo === "" && dataAbat === "") {
+          const erroEl = document.getElementById("edit-error");
+          erroEl.textContent = "Por favor preencha pelo menos 'Tipo Componente' ou 'Data Abatimento'.";
+          erroEl.style.display = "block";
+          return;
+        }
+ 
+        // Só salvar se mudou algo
+        const atual = dados[idSelecionado];
+        if (
+          tipo === (atual.Tipo_componente || "") &&
+          marca === (atual.Marca || "") &&
+          modelo === (atual.Modelo || "") &&
+          numSerie === (atual["Nº_serie"] || "") &&
+          numComp === (atual.Número_componentes || "") &&
+          dataAbat === (atual.data_abatimento || "") &&
+          obs === (atual.Observações || "")
+        ) {
+          alert("Não houve alterações para salvar.");
+          return;
+        }
+ 
+        // Atualizar no Firebase
+        const registroAtualizado = {
+          id_abatidos: atual.id_abatidos,
+          Tipo_componente: tipo,
+          Marca: marca,
+          Modelo: modelo,
+          "Nº_serie": numSerie,
+          Número_componentes: numComp,
+          data_abatimento: dataAbat,
+          Observações: obs
+        };
+ 
+        db.ref('abatidos/' + idSelecionado).set(registroAtualizado)
+          .then(() => {
+            fecharModal('modalEdit');
+          })
+        .catch(err => alert("Erro ao salvar: " + err.message));
+      });
+ 
+      // BOTÃO CONFIRMAR APAGAR (dupla confirmação)
+      document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+        if (!idSelecionado) return;
+        if (deleteStep === 0) {
+          // primeira confirmação
+          document.getElementById('delete-msg-1').style.display = "none";
+          document.getElementById('delete-msg-2').style.display = "block";
+          deleteStep++;
+        } else if (deleteStep === 1) {
+          // segunda confirmação - apagar
+          db.ref('abatidos/' + idSelecionado).remove()
+            .then(() => {
+              deleteStep = 0;
+              idSelecionado = null;
+              fecharModal('modalDelete');
+            })
+          .catch(err => alert("Erro ao apagar: " + err.message));
+        }
+      });
+ 
+      // Permitir mover modais pela header
+      const modais = document.querySelectorAll('.modal');
+      modais.forEach(modal => {
+        let isDown = false, offset = { x: 0, y: 0 };
+        const header = modal.querySelector('.modal-header');
+        header.style.cursor = 'move';
+      
+        header.addEventListener('mousedown', (e) => {
+          isDown = true;
+          offset = {
+            x: modal.offsetLeft - e.clientX,
+            y: modal.offsetTop - e.clientY
+          };
+        });
+ 
+        document.addEventListener('mouseup', () => {
+          isDown = false;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          modal.style.left = (e.clientX + offset.x) + 'px';
+          modal.style.top = (e.clientY + offset.y) + 'px';
+          modal.style.transform = 'none'; // desativa centralizar ao mover
+        });
+      });
+
+               (function () {
+                const modo = localStorage.getItem("modo");
+                if (modo === "escuro") {
+                    document.documentElement.classList.add("modo-escuro");
+                }
+            })();
+
+            document.addEventListener("DOMContentLoaded", () => {
+  const body = document.body;
+  const toggle = document.getElementById("modoToggle");
+  const label = document.getElementById("modoLabel");
+
+  function aplicarModo(modo) {
+    if (modo === "escuro") {
+      body.classList.add("modo-escuro");
+      if (toggle) toggle.checked = true;
+      if (label) label.textContent = "Modo Escuro";
+    } else {
+      body.classList.remove("modo-escuro");
+      if (toggle) toggle.checked = false;
+      if (label) label.textContent = "Modo Claro";
+    }
+  }
+
+  const modoAtual = localStorage.getItem("modo") || "claro";
+  aplicarModo(modoAtual);
+
+  if (toggle) {
+    toggle.addEventListener("change", () => {
+      const novoModo = toggle.checked ? "escuro" : "claro";
+      localStorage.setItem("modo", novoModo);
+      aplicarModo(novoModo);
+    });
+  }
+});
+    </script>
+  </main>
+  <footer>
+    <div class="footer-container">
+      <div class="footer-content">
+        <p>&copy; 2023 GestorTech. Todos os direitos reservados.</p>
+          <p>Desenvolvido por: ESBOCAGE</p>
+      </div>
+        <div class="media-links">
+          <a href="https://www.facebook.com/escolasecundariadubocageoficial/">
+            <img src="facebook.png" alt="Facebook">
+          </a>
+          <a href="https://www.instagram.com/esbocage/">
+            <img src="Instagram.png" alt="Instagram">
+          </a>
+          <a href="https://www.youtube.com/@ESduBocage">
+            <img src="youtube.png" alt="YouTube">
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
